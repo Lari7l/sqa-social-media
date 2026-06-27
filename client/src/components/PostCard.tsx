@@ -16,8 +16,10 @@ export default function PostCard({
 }: PostCardProps) {
   const [liked, setLiked] = useState(post.liked);
   const [isLoading, setIsLoading] = useState(false);
+  const [likesCount, setLikesCount] = useState(post.reactions?.likes ?? 0);
 
   async function handleLike() {
+
     if (!isAuthenticated) {
       alert("Você precisa estar autenticado para curtir posts!");
       return;
@@ -27,10 +29,17 @@ export default function PostCard({
     const previousLiked = liked;
     setLiked(!liked);
 
+    if (liked) {
+      setLikesCount(prev => Math.max(0, prev - 1));
+    } else {
+      setLikesCount(prev => prev + 1);
+    }
+
     try {
       await onLike(post.id);
     } catch {
       setLiked(previousLiked);
+      setLikesCount(post.reactions?.likes ?? 0);
       alert("Erro ao curtir post. Tente novamente.");
     } finally {
       setIsLoading(false);
@@ -80,11 +89,26 @@ export default function PostCard({
       <div
         style={{
           display: "flex",
-          justifyContent: "flex-end",
+          justifyContent: "space-between", // Espaça os likes na esquerda e o botão na direita
           alignItems: "center",
           marginTop: "1rem",
         }}
       >
+
+        <div
+          style={{
+            display: "flex",
+            gap: "1rem",
+            fontSize: "0.9rem",
+            color: "var(--foreground)",
+            opacity: 0.8,
+            fontWeight: "500",
+          }}
+        >
+          <span>👍 {likesCount} Likes</span>
+          <span>👎 {post.reactions?.dislikes ?? 0} Dislikes</span>
+        </div>
+
         <button
           onClick={handleLike}
           disabled={isLoading}
